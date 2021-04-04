@@ -1,18 +1,19 @@
 import ComponentsBuilder from "./components.js";
+import { constants } from "./constants.js";
 export default class TerminalController {
-  #userColors = new Map();
+  #usersColors = new Map();
 
   constructor() {}
 
   #pickColor() {
-    return `#${(((1 << 24) * Math.random()) | 0).toString(16)}-fg`;
+    return "#" + (((1 << 24) * Math.random()) | 0).toString(16) + "-fg";
   }
 
   #getUserColor(userName) {
-    if (this.#userColors.has(userName)) return this.#userColors.get(userName);
+    if (this.#usersColors.has(userName)) return this.#usersColors.get(userName);
 
     const color = this.#pickColor();
-    this.#userColors.set(userName, color);
+    this.#usersColors.set(userName, color);
 
     return color;
   }
@@ -36,8 +37,46 @@ export default class TerminalController {
     };
   }
 
+  #onLogChanged({ screen, activityLog }) {
+    return (activity) => {
+      const [userName] = activity.split(/\s/);
+      const color = this.#getUserColor(userName);
+      activityLog.addItem(`{${color}}{bold}${activity.toString()}{/}`);
+
+      screen.render();
+    };
+  }
+
+  #onStatusChanged({ screen, status }) {
+    return (users) => {
+      // Keeps the status header "Users in the room"
+      // as the first element of the list
+      const { content } = status.items.shift();
+      status.clearItems();
+      status.addItem(content);
+
+      users.forEach((userName) => {
+        const color = this.#getUserColor(userName);
+        status.addItem(`{${color}}{bold}${userName}{/}`);
+      });
+
+      screen.render();
+    };
+  }
+
   #registerEvents(eventEmitter, components) {
-    eventEmitter.on("message:received", this.#onMessageReceived(components));
+    eventEmitter.on(
+      constants.events.app.MESSAGE_RECEIVED,
+      this.#onMessageReceived(components)
+    );
+    eventEmitter.on(
+      constants.events.app.ACTIVITY_LOG_UPDATED,
+      this.#onLogChanged(components)
+    );
+    eventEmitter.on(
+      constants.events.app.STATUS_UPDATED,
+      this.#onStatusChanged(components)
+    );
   }
 
   async initializeTable(eventEmitter) {
@@ -48,6 +87,8 @@ export default class TerminalController {
       .setLayoutComponent()
       .setInputComponent(this.#onInputReceived(eventEmitter))
       .setChatComponent()
+      .setActivityLogComponent()
+      .setStatusComponent()
       .build();
 
     this.#registerEvents(eventEmitter, components);

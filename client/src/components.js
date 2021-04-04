@@ -5,6 +5,8 @@ export default class ComponentsBuilder {
   #layout;
   #input;
   #chat;
+  #status;
+  #activityLog;
 
   constructor() {}
 
@@ -76,11 +78,41 @@ export default class ComponentsBuilder {
     return this;
   }
 
+  setStatusComponent() {
+    this.#status = blessed.list({
+      ...this.#baseComponent(),
+      parent: this.#layout,
+      align: "left",
+      width: "25%",
+      height: "90%",
+      items: ["{bold}Users in the Room{/}"],
+    });
+    return this;
+  }
+
+  setActivityLogComponent() {
+    this.#activityLog = blessed.list({
+      ...this.#baseComponent(),
+      parent: this.#layout,
+      align: "left",
+      width: "25%",
+      height: "90%",
+      style: {
+        fg: "yellow",
+      },
+      items: ["{bold}Activity log{/}"],
+    });
+
+    return this;
+  }
+
   build() {
     const components = {
       screen: this.#screen,
       input: this.#input,
       chat: this.#chat,
+      activityLog: this.#activityLog,
+      status: this.#status,
     };
 
     return components;
