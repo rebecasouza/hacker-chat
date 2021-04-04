@@ -4,6 +4,7 @@ export default class ComponentsBuilder {
   #screen;
   #layout;
   #input;
+  #chat;
 
   constructor() {}
 
@@ -17,7 +18,6 @@ export default class ComponentsBuilder {
         ch: " ",
         inverse: true,
       },
-
       // Enables color and html tags on text
       tags: true,
     };
@@ -60,6 +60,18 @@ export default class ComponentsBuilder {
     });
 
     this.#input.key("enter", onEnterPressed);
+    return this;
+  }
+
+  setChatComponent() {
+    this.#chat = blessed.list({
+      ...this.#baseComponent(),
+      parent: this.#layout,
+      align: "left",
+      width: "50%",
+      height: "90%",
+      items: ["{bold}Messenger{/}"],
+    });
 
     return this;
   }
@@ -68,6 +80,7 @@ export default class ComponentsBuilder {
     const components = {
       screen: this.#screen,
       input: this.#input,
+      chat: this.#chat,
     };
 
     return components;
